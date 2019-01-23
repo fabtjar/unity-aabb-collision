@@ -3,12 +3,15 @@
 public class Player : MonoBehaviour
 {
     float moveSpeed = 4f;
+    float gravity = -20f;
+    float jumpForce = 10f;
     Vector2 velocity;
 
     ColliderBox[] walls;
     ColliderBox colliderBox;
 
     SpriteRenderer sprite;
+    bool onGround;
 
     void Start()
     {
@@ -22,8 +25,12 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        velocity.y += gravity * Time.deltaTime;
+
         velocity.x = Input.GetAxisRaw("Horizontal") * moveSpeed;
-        velocity.y = Input.GetAxisRaw("Vertical") * moveSpeed;
+
+        if (Input.GetKeyDown(KeyCode.UpArrow) && onGround)
+            velocity.y = jumpForce;
 
         Vector2 movement = velocity * Time.deltaTime;
 
@@ -37,13 +44,18 @@ public class Player : MonoBehaviour
             }
         }
 
+        onGround = false;
         foreach (var wall in walls)
         {
             HitData hit = colliderBox.IsOverlapping(new Vector2(movement.x, movement.y), wall);
 
             if (hit != null)
             {
+                if (movement.y < 0)
+                    onGround = true;
+
                 movement.y -= Mathf.Sign(movement.y) * hit.overlap.y;
+                velocity.y = 0;
             }
         }
 
